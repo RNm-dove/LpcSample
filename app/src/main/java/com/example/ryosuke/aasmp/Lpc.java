@@ -2,6 +2,8 @@ package com.example.ryosuke.aasmp;
 
 import org.apache.commons.math3.complex.*;
 
+import java.util.Arrays;
+
 /**
  * Created by ryosuke on 17/08/26.
  */
@@ -33,7 +35,8 @@ public class Lpc {
         if(nlags==0){
             nlags = N;
         }
-        double r[] = new double[nlags];
+        double r[] = new double[N];
+        Arrays.fill(r, 0.0);
         for(int lag=0; lag <nlags; lag++){
             r[lag] = 0.0;
             for(int n=0; n<(N-lag); n++){
@@ -102,6 +105,7 @@ public class Lpc {
 
     protected double[] freqz(double[] e, double[] a, double df, int N){
         double[] H = new double[N];
+        Arrays.fill(H, 0);
         for(int n=0; n < N; ++n){
 
             Complex w = new Complex(0.0, -2.0 * Math.PI * (double)n/N );
@@ -115,7 +119,8 @@ public class Lpc {
             for (int i =0; i < a.length; ++i){
                 denominator = denominator.add(z.pow(i).multiply(a[a.length - 1 -i]));
             }
-            H[n] = numerator.divide(denominator).abs();
+
+            H[n] = 20*Math.log10(numerator.divide(denominator).abs());
 
         }
 

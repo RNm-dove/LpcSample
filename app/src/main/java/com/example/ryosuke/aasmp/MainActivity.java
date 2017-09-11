@@ -18,7 +18,7 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final int LPC_ORDER = 64;
+    private final int LPC_ORDER = 32;
 
     private int REQUEST_PERMISSION = 100;
     private RecordingThread mRecordingThread;
@@ -36,17 +36,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAudioDataReceived(short[] data, double df) {
 
+                int center = data.length/2;
+                double cuttime = 0.04;
+                int SAMPLE_RATE = RecordingThread.SAMPLE_RATE;
+                short[] s = Arrays.copyOfRange(data, (int)(center- cuttime*SAMPLE_RATE/2), (int)(center + cuttime*SAMPLE_RATE/2));
+                double df2 = (double)SAMPLE_RATE/s.length;
+
                 double[] preEmpha_result = mLpc.preEmphasis(mLpc.normalize(data));
                 double[] hamming_result = mLpc.hamming(preEmpha_result);
-                double[] lpc_result = mLpc.lpc(hamming_result, LPC_ORDER, df);
+                double[] lpc_result = mLpc.lpc(hamming_result, LPC_ORDER, df2);
                 short[] reNewdata = mLpc.toShort(mLpc.normalize(lpc_result));
                 short[] halfData = Arrays.copyOfRange(reNewdata, 0, reNewdata.length/2);
 
-                Lpc.Formant formant_result = mLpc.formant(halfData, df);
+                Lpc.Formant formant_result = mLpc.formant(halfData, df2);
                 double f1 = formant_result.first;
                 double f2 = formant_result.second;
 
-                //Log.d("Formant", "f1 is" + f1 + ". f2 is"  + f2);
+                Log.d("Formant", "f1 is" + f1 + ". f2 is"  + f2);
 
 
 
