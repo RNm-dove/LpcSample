@@ -19,8 +19,6 @@ public class RecordingThread {
     private Thread mThread;
     private AudioDataReceivedListener mListener;
 
-    private double mDf;
-
     public RecordingThread(AudioDataReceivedListener listener){mListener = listener;}
 
     public boolean recording(){return mThread != null;}
@@ -63,8 +61,6 @@ public class RecordingThread {
 
         short[] audioBuffer = new short[bufferSize / 2];
 
-        mDf = (double)SAMPLE_RATE/audioBuffer.length;
-
         AudioRecord record = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
                 SAMPLE_RATE,
                 AudioFormat.CHANNEL_IN_MONO,
@@ -84,7 +80,7 @@ public class RecordingThread {
             int numberOfShort = record.read(audioBuffer, 0, audioBuffer.length);
             shortsRead += numberOfShort;
 
-            mListener.onAudioDataReceived(audioBuffer, mDf);
+            mListener.onAudioDataReceived(audioBuffer);
 
         }
 

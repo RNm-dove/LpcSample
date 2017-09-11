@@ -1,5 +1,7 @@
 package com.example.ryosuke.aasmp;
 
+import android.util.Log;
+
 import org.apache.commons.math3.complex.*;
 
 import java.util.Arrays;
@@ -36,7 +38,6 @@ public class Lpc {
             nlags = N;
         }
         double r[] = new double[N];
-        Arrays.fill(r, 0.0);
         for(int lag=0; lag <nlags; lag++){
             r[lag] = 0.0;
             for(int n=0; n<(N-lag); n++){
@@ -105,8 +106,7 @@ public class Lpc {
 
     protected double[] freqz(double[] e, double[] a, double df, int N){
         double[] H = new double[N];
-        Arrays.fill(H, 0);
-        for(int n=0; n < N; ++n){
+        for(int n=0; n < N ; ++n){
 
             Complex w = new Complex(0.0, -2.0 * Math.PI * (double)n/N );
             Complex z = w.exp();
@@ -120,7 +120,7 @@ public class Lpc {
                 denominator = denominator.add(z.pow(i).multiply(a[a.length - 1 -i]));
             }
 
-            H[n] = 20*Math.log10(numerator.divide(denominator).abs());
+            H[n] = numerator.divide(denominator).abs();
 
         }
 
@@ -128,7 +128,7 @@ public class Lpc {
 
     }
 
-    public Formant formant(short[] r, double df){
+    public Formant formant(double[] r, double df){
         Formant result = new Formant();
         result.first = 0.0;
         result.second = 0.0;
@@ -156,7 +156,6 @@ public class Lpc {
             result[i] = r[i]/32768.0;
         }*/
 
-
         double max = r[0];
         double min = r[1];
         for(int i = 1; i < r.length; i++){
@@ -169,10 +168,14 @@ public class Lpc {
             }
         }
         double factor = Math.max(Math.abs(max),Math.abs(min));
+        if(factor < 200)
+            factor = 1;
+        //Log.d("factor",String.valueOf(factor));
 
         for(int i=0; i<r.length; ++i){
             result[i] = r[i]/factor;
         }
+
         return result;
     }
 
@@ -203,7 +206,7 @@ public class Lpc {
         return result;
     }
 
-    public double[] preEmphasis(double[] r){
+    public double[] preEmphasis(short[] r){
         double[] result = new double[r.length];
         result[0] = r[0];
         for(int i=1; i< r.length;i++){
@@ -212,7 +215,7 @@ public class Lpc {
         return result;
     }
 
-    public double[] hamming(double[] r){
+    public double[] hamming(short[] r){
         int N = r.length;
         double[] result = new double[N];
         for(int i=1; i<N -1; ++i){

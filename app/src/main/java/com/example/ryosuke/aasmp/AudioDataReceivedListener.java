@@ -5,5 +5,5 @@ package com.example.ryosuke.aasmp;
  */
 
 public interface AudioDataReceivedListener {
-    void onAudioDataReceived(short[] data, double df);
+    void onAudioDataReceived(short[] data);
 }
