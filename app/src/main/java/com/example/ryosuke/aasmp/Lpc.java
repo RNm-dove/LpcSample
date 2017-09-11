@@ -28,7 +28,7 @@ public class Lpc {
      *             引数がなければ(lag=0からlen(x)-1まですべて)
      * @return
      */
-    public double[] autocorr(double[] x,int nlags){
+    private double[] autocorr(double[] x,int nlags){
         int N = x.length;
         if(nlags==0){
             nlags = N;
@@ -43,7 +43,7 @@ public class Lpc {
         return r;
     }
 
-    public double[] autocorr(double[] x){
+    private double[] autocorr(double[] x){
         double[] r = autocorr(x, 0);
         return r;
     }
@@ -54,7 +54,7 @@ public class Lpc {
      * @param lpcOrder
      * @return
      */
-    public double[] levionsonDurbin(double[] r,int lpcOrder, double df){
+    private double[] levionsonDurbin(double[] r,int lpcOrder, double df){
         double a[] = new double[lpcOrder + 1];   //a[0]は１で固定のためlpcOrder個の係数を得るためには+1が必要
         double e[] = new double[lpcOrder + 1];
 
@@ -104,7 +104,7 @@ public class Lpc {
         double[] H = new double[N];
         for(int n=0; n < N; ++n){
 
-            Complex w = new Complex(0.0, -2.0 * Math.PI * n/N );
+            Complex w = new Complex(0.0, -2.0 * Math.PI * (double)n/N );
             Complex z = w.exp();
             Complex numerator = new Complex(0.0, 0.0);
             Complex denominator = new Complex(0.0, 0.0);
@@ -123,7 +123,7 @@ public class Lpc {
 
     }
 
-    public Formant formant(double[] r, double df){
+    public Formant formant(short[] r, double df){
         Formant result = new Formant();
         result.first = 0.0;
         result.second = 0.0;
@@ -144,7 +144,14 @@ public class Lpc {
 
     }
 
-    public double[] normalize(double[] r){
+    public double[] normalize(short[] r){
+        double[] result = new double[r.length];
+
+        /*for(int i= 0; i<r.length; i++){
+            result[i] = r[i]/32768.0;
+        }*/
+
+
         double max = r[0];
         double min = r[1];
         for(int i = 1; i < r.length; i++){
@@ -157,18 +164,45 @@ public class Lpc {
             }
         }
         double factor = Math.max(Math.abs(max),Math.abs(min));
-        double[] result = new double[r.length];
+
         for(int i=0; i<r.length; ++i){
             result[i] = r[i]/factor;
         }
         return result;
     }
 
-    public double[] preEmphasis(short[] r){
+    public double[] normalize(double[] r){
         double[] result = new double[r.length];
-        result[0] = (double)r[0];
+
+        /*for(int i= 0; i<r.length; i++){
+            result[i] = r[i]/32768.0;
+        }*/
+
+
+        double max = r[0];
+        double min = r[1];
+        for(int i = 1; i < r.length; i++){
+            double v = r[i];
+            if(v > max){
+                max = v;
+            }
+            if(v < min){
+                min = v;
+            }
+        }
+        double factor = Math.max(Math.abs(max),Math.abs(min));
+
+        for(int i=0; i<r.length; ++i){
+            result[i] = r[i]/factor;
+        }
+        return result;
+    }
+
+    public double[] preEmphasis(double[] r){
+        double[] result = new double[r.length];
+        result[0] = r[0];
         for(int i=1; i< r.length;i++){
-            result[i] = (double)r[i] - 0.98*r[i-1];
+            result[i] = r[i] - 0.98*r[i-1];
         }
         return result;
     }

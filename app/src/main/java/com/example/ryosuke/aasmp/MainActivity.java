@@ -8,14 +8,17 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
 import com.newventuresoftware.waveform.WaveformView;
 
+import java.util.Arrays;
+
 public class MainActivity extends AppCompatActivity {
 
-    private final int LPC_ORDER = 32;
+    private final int LPC_ORDER = 64;
 
     private int REQUEST_PERMISSION = 100;
     private RecordingThread mRecordingThread;
@@ -32,17 +35,22 @@ public class MainActivity extends AppCompatActivity {
         mRecordingThread = new RecordingThread(new AudioDataReceivedListener() {
             @Override
             public void onAudioDataReceived(short[] data, double df) {
-                double[] preEmpha_result = mLpc.preEmphasis(data);
-                double[] hamming_result = mLpc.normalize(mLpc.hamming(preEmpha_result));
-                double[] lpc_result = mLpc.normalize(mLpc.lpc(hamming_result, LPC_ORDER, df));
-                short[] reNewdata = mLpc.toShort(lpc_result);
 
-                Lpc.Formant formant_result = mLpc.formant(lpc_result, df);
+                double[] preEmpha_result = mLpc.preEmphasis(mLpc.normalize(data));
+                double[] hamming_result = mLpc.hamming(preEmpha_result);
+                double[] lpc_result = mLpc.lpc(hamming_result, LPC_ORDER, df);
+                short[] reNewdata = mLpc.toShort(mLpc.normalize(lpc_result));
+                short[] halfData = Arrays.copyOfRange(reNewdata, 0, reNewdata.length/2);
+
+                Lpc.Formant formant_result = mLpc.formant(halfData, df);
                 double f1 = formant_result.first;
                 double f2 = formant_result.second;
 
+                //Log.d("Formant", "f1 is" + f1 + ". f2 is"  + f2);
 
-                mRealtimeWaveformView.setSamples(reNewdata);
+
+
+                mRealtimeWaveformView.setSamples(halfData);
             }
         });
 
