@@ -16,64 +16,38 @@ public class Lpc {
 
     }
 
-    public double[] lpc(double[] r, int order, double df){
-        return levionsonDurbin(autocorr(r, order+1), order, df);
-    }
+    public double[] lpc(double[] input, int order, double df){
 
-    protected class Formant{
-        double first;
-        double second;
-     }
+        int N = input.length;
 
-    /**
-     *
-     * @param x: 信号
-     * @param nlags: 自己相関関数のサイズ（lag=0からnlags-1まで)
-     *             引数がなければ(lag=0からlen(x)-1まですべて)
-     * @return
-     */
-    private double[] autocorr(double[] x,int nlags){
-        int N = x.length;
-        if(nlags==0){
-            nlags = N;
-        }
-        double r[] = new double[N];
-        for(int lag=0; lag <nlags; lag++){
-            r[lag] = 0.0;
-            for(int n=0; n<(N-lag); n++){
-                r[lag] += x[n] * x[n + lag];
+        //自己相関関数
+        double[] r = new double[N];
+
+        for(int l=0; l <= order; l++ ){
+            double d = 0.0;
+            for(int n=0; n < N-l; n++){
+                d += input[n] * input[n + l];
             }
+            r[l] = d;
         }
-        return r;
-    }
 
-    private double[] autocorr(double[] x){
-        double[] r = autocorr(x, 0);
-        return r;
-    }
-
-    /**
-     * ｋ次のLPC係数からk+1次のLPC係数を再帰的に計算してLPC係数を求める
-     * @param r
-     * @param lpcOrder
-     * @return
-     */
-    private double[] levionsonDurbin(double[] r,int lpcOrder, double df){
-        double a[] = new double[lpcOrder + 1];   //a[0]は１で固定のためlpcOrder個の係数を得るためには+1が必要
-        double e[] = new double[lpcOrder + 1];
+        //levinson-durbin
+        double a[] = new double[order + 1];   //a[0]は１で固定のためlpcOrder個の係数を得るためには+1が必要
+        double e[] = new double[order + 1];
+        Arrays.fill(a, 0);
+        Arrays.fill(e, 0);
 
         // k＝1 のとき
         a[0] = e[0] = 1.0;
         a[1] = - r[1]/ r[0];
         e[1] = r[0] + r[1] * a[1];
 
-
         //kの場合からk+1の場合を再帰的に求める
-        for(int k=1;k<lpcOrder;k++){
+        for(int k=1; k < order; k++){
             //lambdaを更新
             double lam = 0.0;
-            for(int j=0;j<k+1;j++){
-                lam -= a[j] * r[k+1-j];
+            for(int j=0; j < k + 1; j++){
+                lam -= a[j] * r[k + 1 - j];
             }
             lam /= e[k];
 
@@ -83,16 +57,16 @@ public class Lpc {
             double[] V = new double[k+2];
             U[0] = 1.0;
             V[0] = 0.0;
-            for(int i=1;i<k+1;i++){
+            for(int i = 1; i < k + 1; i++){
                 U[i] = a[i];
-                V[k + 1 -i] = a[i];
+                V[k + 1 - i] = a[i];
             }
             U[k + 1] = 0.0;
             V[k + 1] = 1.0;
 
 
             for(int i=0; i< k + 2; i++){
-                a[i] = U[i] + lam*V[i];
+                a[i] = U[i] + lam * V[i];
             }
 
             //eを更新
@@ -100,13 +74,21 @@ public class Lpc {
 
         }
 
-        return freqz(e, a, df, r.length);
+        return  freqz(e, a, df, N);
+
+
 
     }
 
+    protected class Formant{
+        double first;
+        double second;
+     }
+
+
     protected double[] freqz(double[] e, double[] a, double df, int N){
         double[] H = new double[N];
-        for(int n=0; n < N ; ++n){
+        for(int n = 0; n < N  ; n++){
 
             Complex w = new Complex(0.0, -2.0 * Math.PI * (double)n/N );
             Complex z = w.exp();
@@ -120,7 +102,7 @@ public class Lpc {
                 denominator = denominator.add(z.pow(i).multiply(a[a.length - 1 -i]));
             }
 
-            H[n] = numerator.divide(denominator).abs();
+            H[n] = 20*Math.log10(numerator.divide(denominator).abs());
 
         }
 
@@ -219,7 +201,7 @@ public class Lpc {
         int N = r.length;
         double[] result = new double[N];
         for(int i=1; i<N -1; ++i){
-            double h = 0.54 - 0.46 * Math.cos(2* Math.PI * i / (N -1));
+            double h = 0.54 - 0.46 * Math.cos(2* Math.PI * (double)i / (N -1));
             result[i] = r[i] * h;
         }
         result[0] = result[N-1] = 0;

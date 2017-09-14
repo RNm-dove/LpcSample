@@ -18,7 +18,7 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final int LPC_ORDER = 12;
+    private final int LPC_ORDER = 18;
 
     private int REQUEST_PERMISSION = 100;
     private RecordingThread mRecordingThread;
@@ -36,13 +36,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAudioDataReceived(short[] data) {
 
+                /*
                 int center = data.length/2;
                 double cuttime = 0.04;
                 int SAMPLE_RATE = RecordingThread.SAMPLE_RATE;
                 short[] s = Arrays.copyOfRange(data, (int)(center- cuttime*SAMPLE_RATE/2), (int)(center + cuttime*SAMPLE_RATE/2));
                 double df = (double)SAMPLE_RATE/s.length;
+                */
 
-                double[] hamming_result = mLpc.normalize(mLpc.hamming(s));
+                double df = RecordingThread.SAMPLE_RATE/(double)data.length;
+
+                double[] hamming_result = mLpc.normalize(mLpc.hamming(data));
                 double[] lpc_result = mLpc.normalize(mLpc.lpc(hamming_result, LPC_ORDER, df));
                 short[] reNewdata = mLpc.toShort(lpc_result);
                 short[] halfData = Arrays.copyOfRange(reNewdata, 0, reNewdata.length/2);
@@ -51,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
                 double f1 = formant_result.first;
                 double f2 = formant_result.second;
 
-                Log.d("Formant", "f1 is" + f1 + ". f2 is"  + f2);
+                Log.d("Formant", "f1:" + f1 + ",f2:"  + f2 + "," + mLpc.vowel(f1,f2));
 
 
 
