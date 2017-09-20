@@ -364,7 +364,7 @@ public class Lpc {
     }
 
     /**
-     * フォルマントを渡して母音を区別
+     * フォルマントを渡して母音を区別。改善する余地あり。
      * @param f1
      * @param f2
      * @return

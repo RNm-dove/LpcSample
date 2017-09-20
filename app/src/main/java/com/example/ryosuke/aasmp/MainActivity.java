@@ -11,8 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-
-import com.newventuresoftware.waveform.WaveformView;
+import android.widget.LinearLayout;
 
 import java.util.Arrays;
 
@@ -23,7 +22,8 @@ public class MainActivity extends AppCompatActivity {
     private int REQUEST_PERMISSION = 100;
     private RecordingThread mRecordingThread;
 
-    private WaveformView mRealtimeWaveformView;
+    private LinearLayout mGroundView;
+
     private Lpc mLpc;
 
     @Override
@@ -31,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mRealtimeWaveformView = (WaveformView) findViewById(R.id.waveformView);
+        mGroundView = (LinearLayout) findViewById(R.id.ground_view);
+
         mRecordingThread = new RecordingThread(new AudioDataReceivedListener() {
             @Override
             public void onAudioDataReceived(short[] data) {
@@ -60,8 +61,6 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d("Formant", "f1:" + f1 + ",f2:"  + f2 + "," + mLpc.vowel(f1,f2));
 
-
-                    //mRealtimeWaveformView.setSamples(halfData);
                 }
 
 
@@ -105,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestMicrophonePermission(){
         if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO) && ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO) ){
-            Snackbar.make(mRealtimeWaveformView,"Microphone access is required in order to record audio",
+            Snackbar.make(mGroundView,"Microphone access is required in order to record audio",
                     Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener(){
                 @Override
                 public void onClick(View v){
