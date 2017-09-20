@@ -61,11 +61,13 @@ public class RecordingThread {
 
         short[] audioBuffer = new short[bufferSize / 2];
 
-        AudioRecord record = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
+        AudioRecord record = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
                 SAMPLE_RATE,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
                 bufferSize);
+
+
 
         if(record.getState() != AudioRecord.STATE_INITIALIZED){
             Log.e(LOG_TAG, "Audio Record cant initialize!");
