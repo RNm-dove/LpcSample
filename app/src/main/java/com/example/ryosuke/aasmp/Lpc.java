@@ -25,7 +25,28 @@ public class Lpc {
 
     }
 
-    public double[] lpc(double[] input, int order, int fs){
+    /**
+     *
+     * @param input
+     * @param order
+     * @param fs
+     * @param df
+     * @return
+     */
+    public double[] lpc(double[] input, int order, int fs, double df){
+        return lpc(input, order, fs, df, true);
+    }
+
+    /**
+     *
+     * @param input
+     * @param order
+     * @param fs
+     * @param df
+     * @param is_mode_find_root
+     * @return
+     */
+    public double[] lpc(double[] input, int order, int fs, double df, boolean is_mode_find_root){
 
         int N = input.length;
 
@@ -83,6 +104,15 @@ public class Lpc {
 
         }
 
+        if(!is_mode_find_root){
+            return getFormantFromFreqz(e, a, df, N);
+        }
+
+        return getFormantFromRoots(a, fs);
+    }
+
+    private double[] getFormantFromRoots(double[] a, int fs){
+
         Complex_F64[] rts = findRoots(a);
         ArrayList<Double> arglist = new ArrayList<Double>();
         ArrayList<Complex_F64> rtslist = new ArrayList<Complex_F64>();
@@ -129,19 +159,14 @@ public class Lpc {
             }
         }
 
-
-
         return formant;
-
-
-
     }
 
-    public static Integer[] argsort(final ArrayList<Double> a) {
+    private Integer[] argsort(final ArrayList<Double> a) {
         return argsort(a, true);
     }
 
-    public static Integer[] argsort(final ArrayList<Double> a, final boolean ascending) {
+    private Integer[] argsort(final ArrayList<Double> a, final boolean ascending) {
         Integer[] indexes = new Integer[a.size()];
         for (int i = 0; i < indexes.length; i++) {
             indexes[i] = i;
@@ -152,15 +177,11 @@ public class Lpc {
                 return (ascending ? 1 : -1) * Double.compare(a.get(i1), a.get(i2));
             }
         });
-        /*int[] int_value = new int[indexes.length];
-        for(int i = 0; i < indexes.length; i++){
-            int_value[i] = indexes[i].intValue();
-        }*/
         return indexes;
     }
 
 
-    public static Complex_F64[] findRoots(double... coefficients){
+    public Complex_F64[] findRoots(double... coefficients){
         int N = coefficients.length -1;
 
         //Construct the companion matrix
@@ -188,14 +209,19 @@ public class Lpc {
         return roots;
     }
 
-    protected class Formant{
-        double first;
-        double second;
-     }
 
-
-    protected double[] freqz(double[] e, double[] a, double df, int N){
+    /**
+     * ｚ変換して、フィルターとして包絡線を求めformantを探す。
+     * @param e　error 自己相関関数のerrorをわたし
+     * @param a　自己相関関数の係数郡
+     * @param df　精度率　よくわからないがformantも求めるとき使う。
+     * @param N　配列のサイズ
+     * @return
+     */
+    protected double[] getFormantFromFreqz(double[] e, double[] a, double df, int N){
         double[] H = new double[N];
+
+        //ｚ変換を施す。
         for(int n = 0; n < N  ; n++){
 
             Complex w = new Complex(0.0, -2.0 * Math.PI * (double)n/N );
@@ -210,44 +236,38 @@ public class Lpc {
                 denominator = denominator.add(z.pow(i).multiply(a[a.length - 1 -i]));
             }
 
-            H[n] = 20.0*Math.log10(numerator.divide(denominator).abs());
+            H[n] = 20.0*Math.log10(numerator.divide(denominator).abs()); //デシベルを求める。
 
         }
 
-        return H;
 
-    }
 
-    public Formant formant(double[] r, double df){
-        Formant result = new Formant();
-        result.first = 0.0;
-        result.second = 0.0;
+        //フォルマントを包絡線から探すアルゴリズム。
+        double[] formant = new double[2];
         boolean is_find_first = false;
-        for(int i = 1; i< r.length -1; ++i){
-            if(r[i] > r[i-1] && r[i]>r[i+1]){
+        for(int i = 1; i< H.length -1; ++i){
+            if(H[i] > H[i-1] && H[i]>H[i+1]){
                 if(!is_find_first){
-                    result.first = df * i;
+                    formant[0] = df * i;
                     is_find_first = true;
                 } else {
-                    result.second = df * i;
+                    formant[1] = df * i;
                     break;
                 }
             }
         }
 
-        return result;
+        return formant;
 
     }
 
-
-
+    /**
+     * 正規化。一番最大の値で割る。
+     * @param r　データ
+     * @return −1.0〜1.0に正規化されたデータ
+     */
     public double[] normalize(double[] r){
         double[] result = new double[r.length];
-
-        /*for(int i= 0; i<r.length; i++){
-            result[i] = r[i]/32768.0;
-        }*/
-
 
         double max = r[0];
         double min = r[1];
@@ -268,7 +288,12 @@ public class Lpc {
         return result;
     }
 
-    public double[] preEmphasis(short[] r){
+    /**
+     * プリエンファシスフィルタ。高周波を強調し実際の人間の耳の特性に近づける。
+     * @param r　データ
+     * @return 高周波が強調されたデータ
+     */
+    public double[] preEmphasis(double[] r){
         double[] result = new double[r.length];
         result[0] = r[0];
         for(int i=1; i< r.length;i++){
@@ -277,6 +302,11 @@ public class Lpc {
         return result;
     }
 
+    /**
+     * ハミング窓関数。
+     * @param r
+     * @return
+     */
     public double[] hamming(double[] r){
         int N = r.length;
         double[] result = new double[N];
@@ -287,6 +317,15 @@ public class Lpc {
         result[0] = result[N-1] = 0;
         return result;
     }
+
+    public double[] toDouble(short[] r){
+        double[] result = new double[r.length];
+        for(int i=0; i<r.length; i++){
+            result[i] = r[i]/32767.0;
+        }
+        return result;
+    }
+
 
     public short[] toShort(double[] r){
         short[] result = new short[r.length];
@@ -314,11 +353,22 @@ public class Lpc {
         return Math.sqrt(v);
     }
 
+    /**
+     * ノイズ対策
+     * @param data
+     * @return
+     */
     public boolean isAudible(short[] data ){
         double rms = volume(data);
         return (rms > 198 && 5600 >rms);
     }
 
+    /**
+     * フォルマントを渡して母音を区別
+     * @param f1
+     * @param f2
+     * @return
+     */
     public String vowel(double f1, double f2)
     {
         if (f1 > 600 && f1 < 1400 && f2 > 900  && f2 < 2000) return "あ";

@@ -13,7 +13,7 @@ import android.util.Log;
 public class RecordingThread {
 
     private static final String LOG_TAG = RecordingThread.class.getSimpleName();
-    public static final int SAMPLE_RATE = 44100;
+    private static final int SAMPLE_RATE = 44100;
 
     private boolean isRecording;
     private Thread mThread;
@@ -22,6 +22,8 @@ public class RecordingThread {
     public RecordingThread(AudioDataReceivedListener listener){mListener = listener;}
 
     public boolean recording(){return mThread != null;}
+
+    public static int getSampleRate(){return SAMPLE_RATE;}
 
     public void startRecording(){
         if(mThread != null)

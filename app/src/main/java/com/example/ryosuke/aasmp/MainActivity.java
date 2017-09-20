@@ -36,29 +36,32 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAudioDataReceived(short[] data) {
 
+                if(mLpc == null){
+                    mLpc = new Lpc();
+                }
+
                 if(mLpc.isAudible(data)){
                     int center = data.length/2;
                     double cuttime = 0.04;
-                    int SAMPLE_RATE = RecordingThread.SAMPLE_RATE;
+                    int SAMPLE_RATE = RecordingThread.getSampleRate();
                     short[] s = Arrays.copyOfRange(data, (int)(center- cuttime*SAMPLE_RATE/2), (int)(center + cuttime*SAMPLE_RATE/2));
-                    //double df = (double)SAMPLE_RATE/s.length;
 
-                    //double df = RecordingThread.SAMPLE_RATE/(double)data.length;
 
-                    double[] pre_result = mLpc.preEmphasis(s);
+                    double df = (double)SAMPLE_RATE/s.length;
+                    //double df = SAMPLE_RATE/(double)data.length;
+
+                    double[] double_result = mLpc.toDouble(s);
+                    double[] pre_result = mLpc.preEmphasis(double_result);
                     double[] hamming_result = mLpc.hamming(pre_result);
-                    double[] lpc_result = mLpc.lpc(hamming_result, LPC_ORDER, SAMPLE_RATE);
-                    short[] reNewdata = mLpc.toShort(lpc_result);
-                    short[] halfData = Arrays.copyOfRange(reNewdata, 0, reNewdata.length/2);
+                    double[] formant = mLpc.lpc(hamming_result, LPC_ORDER, SAMPLE_RATE, df);
 
-                    //Lpc.Formant formant_result = mLpc.formant(lpc_result, df);
-                    double f1 = lpc_result[0];
-                    double f2 = lpc_result[1];
+                    double f1 = formant[0];
+                    double f2 = formant[1];
 
                     Log.d("Formant", "f1:" + f1 + ",f2:"  + f2 + "," + mLpc.vowel(f1,f2));
 
 
-                    mRealtimeWaveformView.setSamples(halfData);
+                    //mRealtimeWaveformView.setSamples(halfData);
                 }
 
 
