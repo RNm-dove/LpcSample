@@ -22,11 +22,10 @@ import java.util.Iterator;
 public class Lpc {
 
     public Lpc() {
-
     }
 
     /**
-     *
+     * LPC法を用いたフォルマント分析。第六引数を省略すると、ｌｐｃ係数の根号を求める方法に。
      * @param input
      * @param order
      * @param fs
@@ -38,13 +37,14 @@ public class Lpc {
     }
 
     /**
-     *
+     *LPC法を用いたフォルマント分析。
      * @param input
      * @param order
      * @param fs
      * @param df
-     * @param is_mode_find_root
-     * @return
+     * @param is_mode_find_root trueだとｌｐｃ係数を係数に持つx^n＝０の答えを求めてそこからフォルマントを求める。
+     *                          falseだとlpc係数をフィルター係数としてz変換して求めた包絡線からフォルマントを得る。
+     * @return フォルマントの配列
      */
     public double[] lpc(double[] input, int order, int fs, double df, boolean is_mode_find_root){
 
@@ -181,7 +181,7 @@ public class Lpc {
     }
 
 
-    public Complex_F64[] findRoots(double... coefficients){
+    private Complex_F64[] findRoots(double... coefficients){
         int N = coefficients.length -1;
 
         //Construct the companion matrix
@@ -218,7 +218,7 @@ public class Lpc {
      * @param N　配列のサイズ
      * @return
      */
-    protected double[] getFormantFromFreqz(double[] e, double[] a, double df, int N){
+    private double[] getFormantFromFreqz(double[] e, double[] a, double df, int N){
         double[] H = new double[N];
 
         //ｚ変換を施す。
@@ -371,12 +371,12 @@ public class Lpc {
      */
     public String vowel(double f1, double f2)
     {
-        if (f1 > 600 && f1 < 1400 && f2 > 900  && f2 < 2000) return "あ";
+        if (f1 > 600 && f1 < 1400 && f2 > 900  && f2 < 1500) return "あ";
         if (f1 > 100 && f1 < 410  && f2 > 1900 && f2 < 3500) return "い";
-        if (f1 > 100 && f1 < 300  && f2 > 1100 && f2 < 2000) return "う";
-        if (f1 > 400 && f1 < 800  && f2 > 1700 && f2 < 3000) return "え";
-        if (f1 > 300 && f1 < 900  && f2 > 500  && f2 < 1300) return "お";
-        return "-";
+        if (f1 > 100 && f1 < 410  && f2 > 1100 && f2 < 2000) return "う";
+        if (f1 > 400 && f1 < 600  && f2 > 1700 && f2 < 2500) return "え";
+        if (f1 > 400 && f1 < 850  && f2 > 600  && f2 < 1500) return "お";
+        return "";
     }
 
 
